@@ -6,6 +6,8 @@ class Call
    public String type;
    public String callString;
    public String union = null;
+   public boolean containsVar = false;
+   public boolean negative = false;
 
    public Call(String string)
    {
@@ -18,7 +20,17 @@ class Call
          module = moduleString[0];
          union = moduleString[1];
       }
-      assumption = string.split(",")[1];
+      assumption = string.split("\\[")[1];
+      assumption = assumption.split("\\]")[0];
+      if(assumption.startsWith("-"))
+      {
+         negative = true;
+         assumption = assumption.replace("-","");
+      }         
+      if(!assumption.equals(assumption.toLowerCase()))
+      {
+         containsVar = true;
+      }
       type = string.split(",")[2];
       type = type.split("\\}")[0];
    }

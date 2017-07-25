@@ -1,2 +1,2 @@
-javac GUI.java -classpath ~/Desktop/Mad/lib/gs-core-1.3.jar
-java GUI
+javac GUI.java -cp ~/Desktop/Mad/lib
+java GUI -cp ~/Desktop/Mad/lib

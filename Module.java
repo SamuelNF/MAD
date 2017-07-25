@@ -1,3 +1,11 @@
+/*
+Module class takes a string, writes the string to file, inputs the
+file into Clingo, and stores the results. Uses the engine.lp script
+to capture Assumption-based argumentation reasoning, with assumptions
+being denoted as being part of a admissible set with the "in(<ass>)"
+phrase.
+*/
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;

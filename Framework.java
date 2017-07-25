@@ -1,202 +1,266 @@
+/*
+Framework class takes modules as strings and compiles them into Module objects.
+Handles calls to the results of other modules recursively, by attempting to 
+compile called modules first (this can cause a loop if the modules include 
+circular calls). 
+*/
+
 import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
 class Framework
 {
-   private Map<String,String> moduleStrings = new HashMap<String,String>();
-   private Map<String,Module> modules = new HashMap<String,Module>();
+   private Map<String,String> modules = new LinkedHashMap<String,String>();
 
+//Test module strings
    private static String t1 =
    "%%Test1%%\n"+
    "ass(a).\n"+
    "ass(b).\n"+
    "contrary(a,b).\n"+
-   "in(a):-call{Test3,a,sk}.\n";
+   "in(a):-call{Test2+d,[c],sk}.\n";
 
    private static String t2 =
    "%%Test2%%\n"+
    "ass(a).\n"+
    "ass(b).\n"+
    "contrary(a,b).\n"+
-   "in(c):-call{Test3,b,sk}.\n"+
-   "in(a):-call{Test3+c,a,sk}.\n";
+   "in(a):-call{Test3,[price(X,Y)],sk},X>Y.\n"+
+   "in(c):-call{Test3,[b],cr},in(d).\n";
 
    private static String t3 =
    "%%Test3%%\n"+
    "ass(a).\n"+
    "ass(b).\n"+
-   "contrary(a,b).\n"+
-   "in(a):-in(c).\n";
+   "in(price(80)).\n"+
+   "in(price(110)).\n"+
+   "contrary(a,b).\n";
 
-   public void addModString(String name, String string)
-   {
-      moduleStrings.put(name,string);
-   }      
-
-   public static void main(String[] args)
-   {
-      Framework f = new Framework();
-      f.addModString(f.name(t1),t1);
-      f.addModString(f.name(t2),t2);
-      f.addModString(f.name(t3),t3);
-      f.compileAllModules();
-      f.displayResults();
-   }
-
-   private boolean containsCall(String module)
-   {
-      Pattern pattern = Pattern.compile("call\\{.*?\\}");
-      Matcher matcher = pattern.matcher(module);
-      if(matcher.find())
-      {
-         return true;
-      }
-      else return false;
-   }
-
+//Returns module name from string
    private String name(String module)
    {
       return module.split("%%")[1];
    }
 
-   public void displayResults()
+//Adds string to module map
+   public void addModString(String name, String string)
    {
-      for(Module m : modules.values())
+      modules.put(name,string);
+   }      
+
+//Compiles and prints all module results
+   public void getAllResults()
+   {
+      for(String module: modules.keySet())
       {
-         m.displayResults();
+         getResults(module);
       }
    }
 
-   private int totalCalls()
+//Compiles and prints named module results
+   public void getResults(String name)
    {
-      int calls = 0;
-      for(String module: moduleStrings.values())
-      {
-         if(containsCall(module))
-         {
-            calls = calls + ((module.length()-module.replace("call","").length())/4);
-         }
-      }
-      return calls;
-   }
-  
-   public void compileAllModules()
-   {
-      int passes = 0;
-      int maxPasses = moduleStrings.size() + totalCalls();
-
-      while(modules.size() < moduleStrings.size())
-      {   
-         passes++;
-         System.out.print("\n%%%% Pass: "+passes+" %%%%\n\n"); 
-         for(String module: moduleStrings.keySet())
-         {
-            if(!modules.containsKey(module))
-            {
-               compileModule(module);
-            }
-         }
-         if(passes > maxPasses)
-         {
-            System.out.print("\n--------\nERROR - MAXIMUM PASSES REACHED\n--------\n");
-            return;
-         }      
-      }
+      System.out.println("\nGETTING RESULTS FOR "+name);
+      Module m = compileModule(modules.get(name));
+      m.displayResults();
    }
 
-   private void compileModule(String name)
+//Checks module for module calls
+   private boolean containsCall(String module)
    {
-      String module = moduleStrings.get(name);
-      System.out.println("Examining \""+name+"\":\n"+module);
-      if(containsCall(module))
+      Pattern pattern = Pattern.compile("call\\{.*?\\}");
+      Matcher matcher = pattern.matcher(module);
+      if(matcher.find()) return true;
+      else return false;
+   }
+
+//Resolves module calls and returns compiled Module object
+   private Module compileModule(String module)
+   {
+      while(containsCall(module))
       {
-         System.out.println("CALL FOUND");
-         checkCall(name);
+         
+         Call call = getCall(module);
+         System.out.println("Trying to resolve call \""+call.callString+"\"");
+         module = resolveCall(module, call);
+      }
+      System.out.println("\nCOMPILING MODULE\n"+module);
+      Module m = new Module(name(module), module);
+      m.displayResults();
+      return m;
+   }
+
+//Returns first call string found in module
+   private Call getCall(String module)
+   {
+      Pattern pattern = Pattern.compile("call\\{.*?\\}");
+      Matcher matcher = pattern.matcher(module);
+      if(matcher.find())
+      {
+         return new Call(matcher.group(0));
       }
       else
       {
-         System.out.println("COMPILING MODULE \""+name+"\"\n-------------");
-         modules.put(name,new Module(name,module));
+         System.out.println("WARNING - NO CALL FOUND BY getCall()");
+         return null;
       }
    }
 
-   private void checkCall(String name)
+//Creates Module object for target of call, and resolves call based on results
+   private String resolveCall(String module, Call call)
    {
-      Pattern pattern = Pattern.compile("call\\{.*?\\}");
-      String mString = moduleStrings.get(name);
-      Matcher matcher = pattern.matcher(mString);
+      if(call==null) return module;
+
+      String callMod = modules.get(call.module);
+
+      if(call.union!=null)
+      {
+         callMod = callMod + "in("+ call.union +").\n";
+      }
+      
+      Module m = compileModule(callMod);
+
+      if(call.containsVar)
+      {
+         module = resolveVars(module, m, call);
+      }
+      else
+      {
+         if(callSucceeds(m, call))
+         {
+            System.out.println("CALL SUCCESS - "+call.callString);
+            module = affirmCall(module, call);
+         }
+         else
+         {
+            System.out.println("CALL FAILED - "+call.callString);
+            module = removeCall(module, call);
+         }
+      }
+      return module;
+   }
+
+//Resolves call containing free variables
+   private String resolveVars(String s, Module m, Call c)
+   {
+      HashMap<String,String> vars = getVarValues(m,c);
+      System.out.println(vars);
+      s = groundVars(s, vars, c);
+      return s;
+   }
+
+//Replaces call with variables with variable assignments
+   private String groundVars(String s, HashMap<String,String> vars, Call c)
+   {
+      String assignments = "";
+      boolean first = true;
+      for (HashMap.Entry<String, String> entry : vars.entrySet()) 
+      {
+         String key = entry.getKey();
+         Object value = entry.getValue();
+         if(!first)
+         {
+            assignments = assignments + ",";
+         } else first = false;
+         assignments = assignments + key + "=" + value;
+      }
+      return s.replace(c.callString,assignments);
+   }
+
+//Gets the possible variable values from module results and returns them as mapping
+//Currently unable to handle more than one possible value per module
+   private HashMap<String,String> getVarValues(Module m, Call c)
+   {
+      HashMap<String,String> vars = new HashMap<String,String>();
+      String regex = replaceVars(c.assumption,"[.[^,]]+");
+      Pattern pattern = Pattern.compile(regex);
+
+      for(String result: m.getSceptical())
+      {
+         Matcher matcher = pattern.matcher(result);
+         if(matcher.find())
+         {
+            String v = c.assumption;
+            String r = result;
+            int vCurrent = 0;
+            int rCurrent = 0;
+            while(vCurrent<v.length() && rCurrent<r.length())
+            {
+               System.out.println("v = \""+v.substring(vCurrent));
+               System.out.println("r = \""+r.substring(rCurrent));
+               if(v.toCharArray()[vCurrent] != r.toCharArray()[rCurrent])
+               {
+                  String variable = getVar(v.substring(vCurrent));
+                  String value = getValue(r.substring(rCurrent));
+                  vars.put(variable,value);
+                  vCurrent = vCurrent + variable.length();
+                  rCurrent = rCurrent + value.length();
+               }
+               vCurrent++;
+               rCurrent++;
+            }
+         }
+         else System.out.println("NO MATCH FOUND");
+      }
+      return vars;
+   }
+
+//Gets the value out of a substring (used above to extract variable values from module results)
+   private String getValue(String s)
+   {
+      if(s.contains(","))
+      {
+         return s.split(",")[0];
+      }
+      else
+      {
+         s = s.replaceAll("\\)","");
+         return s;
+      }
+   }
+
+//Replaces any variables (words starting in capital) with regex string
+   private String replaceVars(String s, String replacement)
+   {
+      while(getVar(s)!=null)
+      {
+         s = s.replace(getVar(s),"%");
+      }
+      s = s.replaceAll("%",replacement);
+      return s;
+   }   
+
+//Returns first variable in string
+   private String getVar(String s)
+   {
+      String var = null;
+      Pattern pattern = Pattern.compile("[A-Z]+[a-z]*");
+      Matcher matcher = pattern.matcher(s);
       if(matcher.find())
       {
-         Call call = new Call(matcher.group(0));
-         if(modules.containsKey(call.module))
-         {
-            System.out.println(name+" - RESOLVING CALL "+call.callString);
-            if(call.hasUnion())
-            {
-               String tempModule = moduleStrings.get(call.module) + "in("+ call.union +").\n";
-               call.module = "temp";
-               moduleStrings.put("temp",tempModule);
-               compileModule("temp");
-               moduleStrings.put(name,resolveCall(mString,call));
-               moduleStrings.remove("temp");
-               modules.remove("temp");
-            }
-            else
-            {
-               moduleStrings.put(name,resolveCall(mString, call));
-            }
-         }
-         else System.out.println("CANNOT RESOLVE CALL "+call.callString);
+         var = matcher.group(0);
       }
+      return var;
    }
 
-   private String resolveCall(String string, Call call)
-   {
-      if(call.type.equals("sk"))
-      {
-         if(modules.get(call.module).getSceptical().contains(call.assumption))
-         {
-            System.out.println(call.callString+" succeeded!");
-            string = affirmCall(string, call);
-         }
-         else
-         {
-            System.out.println(call.callString+" failed!");
-            string = removeCall(string, call);
-         }
-      }
-      else if(call.type.equals("cr"))
-      {
-         if(modules.get(call.module).getCredulous().contains(call.assumption))
-         {
-            System.out.println(call.callString+" succeeded!");          
-            string = affirmCall(string, call);
-         }
-         else
-         {
-            System.out.println(call.callString+" failed!");
-            string = removeCall(string, call);
-         }
-      }
-      System.out.println("====== New Module String ======\n"+string+"====================");
-      return string; 
-   }
-
+//Removes call from rule tail (same as replacing with tautology)
    private String affirmCall(String string, Call call)
    {
-      if(string.contains(","+call.callString))
+      if(string.contains(call.callString+","))
       {
-         return string.replace(","+call.callString,"");
+         string = string.replace(call.callString+",","");
       }
       else if(string.contains(call.callString))
       {
-         return string.replace(call.callString,"");
+         string = string.replace(call.callString,"");
       }
-      System.out.println("%%%%%%%%% SOMETHING WENT WRONG WITH CALL AFFIRMATION %%%%%%%%");
+      string = string.replace(":-.",".");
+      string = string.replace(",.",".");
       return string;
-   }      
+   }   
 
+//Removes rule of which call was tail (preventing any implication of head)
    private String removeCall(String string, Call call)
    {
       String[] lines = string.split("\n");
@@ -210,4 +274,49 @@ class Framework
       }
       return newString;
    }
+
+//Checks whether a call to a module succeeds
+   private boolean callSucceeds(Module m, Call call)
+   {
+      if(call.negative)
+      {
+         if(call.type.equals("sk"))
+         {
+            System.out.println("Call is negative and sceptical: ");
+            if(m.getCredulous().contains(call.assumption)) return false;
+            else return true;
+         }
+         else
+         {
+            System.out.println("Call is negative and credulous");
+            if(m.getSceptical().contains(call.assumption)) return false;
+            else return true;
+         }
+      }
+      else
+      {
+         if(call.type.equals("sk"))
+         {
+            System.out.println("Call is positive and sceptical");
+            if(m.getSceptical().contains(call.assumption)) return true;
+            else return false;
+         }
+         else
+         {
+            System.out.println("Call is positive and credulous");
+            if(m.getCredulous().contains(call.assumption)) return true;
+            else return false;
+         }
+      }
+   }
+
+   public static void main(String[] args)
+   {
+      Framework f = new Framework();
+      f.addModString(f.name(t1),t1);
+      f.addModString(f.name(t2),t2);
+      f.addModString(f.name(t3),t3);
+      f.getAllResults();
+   }
 }
+

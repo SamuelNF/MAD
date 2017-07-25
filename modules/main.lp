@@ -1,8 +1,9 @@
 #include "engine.lp".
 %%main%%
-in(rescind(customer)):-mutualmistake(barren),violatebasicassumption(),not risk(customer).
-in(rescind(supplier)):-mutualmistake(barren),violatebasicassumption(),not risk(supplier).
+party(customer).
+party(supplier).
+in(rescind(X)):-mutualmistake(barren),violatebasicassumption(),not risk(X),party(X).
 mutualmistake(barren):-hold(pregnant).
-violatebasicassumption():-hold(pregnant).
+violatebasicassumption():-hold(pregnant),X=800,X>80.
 risk(supplier):-mutualmistake(barren).
 hold(pregnant).
