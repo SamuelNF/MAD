@@ -22,19 +22,21 @@ class Sherwood
       "mutualmistake(barren):-hold(pregnant),call{CK+pregnant,[-barren],sk},"+
       "call{BC,[barren],cr},call{BS,[barren],cr},call{BC+barren,[price(80)],sk},"+
       "call{BS+barren,[price(80)],sk}.\n"+
-      "violatebasicassumption():-hold(pregnant),call{CK+pregnant,[notsale],sk}.\n"+
+      "violatebasicassumption():-hold(stolen),call{CK+stolen,[notsale],sk}.\n"+
       //Not entirely sure how to implement the transaction possibility condition
       //(T or SaleOfCow in Dung's paper).
       "violatebasicassumption():-hold(pregnant),call{CK+pregnant,[price(X)],sk},X>80.\n"+
       "risk(customer):-mutualmistake(barren),call{BC,[-barren],cr}.\n"+
       "risk(supplier):-mutualmistake(barren),call{BS,[-barren],cr}.\n"+
-      "hold(pregnant).\n";
+      "hold(pregnant).\n"+
+      "hold(stolen).\n";
 
       String CK =
       "%%CK%%\n"+
       "ass(barren).\n"+
       "in(price(800)):-in(pregnant).\n"+
       "in(-barren):-in(pregnant).\n"+
+      "in(notsale):-in(stolen).\n"+
       "contrary(barren,-barren).\n";
 
       String KS =

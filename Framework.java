@@ -15,22 +15,22 @@ class Framework
 
 //Test module strings
    private static String t1 =
-   "%%Test1%%\n"+
+   "%%test1%%\n"+
    "ass(a).\n"+
    "ass(b).\n"+
    "contrary(a,b).\n"+
-   "in(a):-call{Test2+d,[c],sk}.\n";
+   "in(a):-call{test2+d,[c],sk}.\n";
 
    private static String t2 =
-   "%%Test2%%\n"+
+   "%%test2%%\n"+
    "ass(a).\n"+
    "ass(b).\n"+
    "contrary(a,b).\n"+
-   "in(a):-call{Test3,[price(X,Y)],sk},X>Y.\n"+
-   "in(c):-call{Test3,[b],cr},in(d).\n";
+   "in(a):-call{test3,[price(X,Y)],sk},X>Y.\n"+
+   "in(c):-call{test3,[b],cr},in(d).\n";
 
    private static String t3 =
-   "%%Test3%%\n"+
+   "%%test3%%\n"+
    "ass(a).\n"+
    "ass(b).\n"+
    "in(price(80)).\n"+
