@@ -26,16 +26,7 @@ class Framework
    "ass(a).\n"+
    "ass(b).\n"+
    "contrary(a,b).\n"+
-   "in(a):-call{test3,[price(X,Y)],sk},X>Y.\n"+
-   "in(c):-call{test3,[b],cr},in(d).\n";
-
-   private static String t3 =
-   "%%test3%%\n"+
-   "ass(a).\n"+
-   "ass(b).\n"+
-   "in(price(80)).\n"+
-   "in(price(110)).\n"+
-   "contrary(a,b).\n";
+   "in(c):-in(d).\n";
 
 //Returns module name from string
    private String name(String module)
@@ -315,7 +306,6 @@ class Framework
       Framework f = new Framework();
       f.addModString(f.name(t1),t1);
       f.addModString(f.name(t2),t2);
-      f.addModString(f.name(t3),t3);
       f.getAllResults();
    }
 }

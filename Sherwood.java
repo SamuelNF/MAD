@@ -1,5 +1,3 @@
-// Meeting oliver thursday 12am
-
 // Currently set up to have on resolution the customer able to rescind, because the supplier
 // was in a position to expect the possibility of the cow being pregnant, represented
 // by -barren being an assumption in BS.
@@ -28,15 +26,13 @@ class Sherwood
       "violatebasicassumption():-hold(pregnant),call{CK+pregnant,[price(X)],sk},X>80.\n"+
       "risk(customer):-mutualmistake(barren),call{BC,[-barren],cr}.\n"+
       "risk(supplier):-mutualmistake(barren),call{BS,[-barren],cr}.\n"+
-      "hold(pregnant).\n"+
-      "hold(stolen).\n";
+      "hold(pregnant).\n";
 
       String CK =
       "%%CK%%\n"+
       "ass(barren).\n"+
       "in(price(800)):-in(pregnant).\n"+
       "in(-barren):-in(pregnant).\n"+
-      "in(notsale):-in(stolen).\n"+
       "contrary(barren,-barren).\n";
 
       String KS =
