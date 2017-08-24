@@ -34,6 +34,13 @@ class Framework
       return module.split("%%")[1];
    }
 
+//Returns string from module
+   
+   public String module(String name)
+   {
+      return modules.get(name);
+   }
+
 //Adds string to module map
    public void addModString(String name, String string)
    {
@@ -67,7 +74,7 @@ class Framework
    }
 
 //Resolves module calls and returns compiled Module object
-   private Module compileModule(String module)
+   public Module compileModule(String module)
    {
       while(containsCall(module))
       {
@@ -238,7 +245,15 @@ class Framework
 //Removes call from rule tail (same as replacing with tautology)
    private String affirmCall(String string, Call call)
    {
-      if(string.contains(call.callString+","))
+      if(string.contains("in("+call.callString+"),"))
+      {
+         string = string.replace("in("+call.callString+"),","");
+      }
+      else if(string.contains("in("+call.callString+")"))
+      {
+         string = string.replace("in("+call.callString+")","");
+      }
+      else if(string.contains(call.callString+","))
       {
          string = string.replace(call.callString+",","");
       }

@@ -7,7 +7,7 @@ class Sherwood
    public static void main(String[] args)
    {
       Framework f = new Framework();
-
+   
       String main =
       "%%main%%\n"+
       "party(customer).\n"+
@@ -50,7 +50,7 @@ class Sherwood
       "contrary(barren,-barren).\n";
 
       String BC =
-      "%%BC%%\n"+
+      "%%BC%%\n"+ 
       "ass(barren).\n"+
       "in(price(800)):-in(pregnant).\n"+
       "in(-barren):-in(pregnant).\n"+

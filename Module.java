@@ -61,25 +61,24 @@ class Module
       }
    }
 
+   public List<List<String>> getAdmissible()
+   {
+      return admissible;
+   }
+
    public List<List<String>> getPreferred()
    {
-      List<List<String>> copy = new ArrayList<List<String>>();
-      copy.addAll(preferred);
-      return copy;
+      return preferred;
    }
 
    public List<String> getCredulous()
    {
-      List<String> copy = new ArrayList<String>();
-      copy.addAll(credulous);
-      return copy;
+      return credulous;
    }
 
    public List<String> getSceptical()
    {
-      List<String> copy = new ArrayList<String>();
-      copy.addAll(sceptical);
-      return copy;
+      return sceptical;
    }
 
    private void readFile()
@@ -107,12 +106,12 @@ class Module
             {
                List<String> set = new ArrayList<String>();
                line = input.readLine();
-              // System.out.println("Admissible set found");
+            // System.out.println("Admissible set found");
                Matcher matcher = pattern.matcher(line);
                while (matcher.find())
                {    
                   String assumption = matcher.group(0);
-              //    System.out.println("Found one "+assumption);
+            //    System.out.println("Found one "+assumption);
                   assumption = assumption.replace(" ","");
                   assumption = assumption.substring(assumption.indexOf('(')+1, assumption.length() - 1);
                   set.add(assumption);
