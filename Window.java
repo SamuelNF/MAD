@@ -152,12 +152,21 @@ public class Window extends Application
          }
       }
 
-      Button btn = new Button("Create Rule");
-      btn.setOnAction(new EventHandler<ActionEvent>() 
+      Button createbtn = new Button("Create Rule");
+      createbtn.setOnAction(new EventHandler<ActionEvent>() 
       {       
          @Override
          public void handle(ActionEvent e) {
             addRule(list,headField.getText(),tailField.getText());
+         }
+      });
+
+      Button callbtn = new Button("Add Call");
+      callbtn.setOnAction(new EventHandler<ActionEvent>() 
+      {       
+         @Override
+         public void handle(ActionEvent e) {
+            addCall(tailField, getTabNames());
          }
       });
 
@@ -169,7 +178,7 @@ public class Window extends Application
       HBox hbox2 = new HBox();
       hbox2.setSpacing(5);
       hbox2.setPadding(new Insets(10, 0, 20, 10));
-      hbox2.getChildren().addAll(btn);
+      hbox2.getChildren().addAll(createbtn, callbtn);
 
       Button deletebtn = new Button("Delete");
       deletebtn.setOnAction(new EventHandler<ActionEvent>() 
@@ -195,6 +204,73 @@ public class Window extends Application
          return;
       }
       table.add(new Rule(head,tail));
+   }
+
+   private void addCall(TextField field, List<String> modules)
+   {
+      final Stage dialog = new Stage();
+      dialog.setTitle("New Call");
+      dialog.initModality(Modality.APPLICATION_MODAL);
+      dialog.initOwner(field.getScene().getWindow());
+
+      final ComboBox moduleMenu = new ComboBox(FXCollections.observableArrayList(modules));
+
+      TextField sentence = new TextField();
+      TextField addition = new TextField();
+      final ComboBox typemenu = new ComboBox(FXCollections.observableArrayList("Sceptical","Credulous"));
+      CheckBox negative = new CheckBox("Call is negative");
+      negative.setSelected(false);
+      Label error = new Label();
+      Button btn = new Button("Add call");
+      btn.setOnAction(new EventHandler<ActionEvent>() 
+      {       
+         @Override
+         public void handle(ActionEvent e) {
+            String s = field.getText();
+            if(!sentence.getText().isEmpty() && !moduleMenu.getSelectionModel().isEmpty() && !typemenu.getSelectionModel().isEmpty())
+            {
+               if(!s.isEmpty())
+               {
+                  s = s + ",";
+               }
+               s = s + "call{" + moduleMenu.getSelectionModel().getSelectedItem().toString();
+               if(!addition.getText().isEmpty())
+               {
+                  s = s + "+" + addition.getText();
+               }
+               s = s + ",[";
+               String sen = sentence.getText();
+               if(negative.isSelected())
+               {
+                  sen = "not " + sen;
+               }
+               s = s + sen + "],";
+               if(typemenu.getSelectionModel().getSelectedItem().toString().equals("Sceptical"))
+               {
+                  s = s + "sk}";
+               }
+               else
+               {
+                  s = s + "cr}";
+               }
+               field.setText(s);
+               dialog.close();
+            }
+            else error.setText("Module, Sentence and Type required");
+         }
+      });
+
+      HBox buttonline = new HBox();
+      buttonline.setSpacing(10);
+      buttonline.getChildren().addAll(btn,error);
+      VBox vbox = new VBox(20);
+      vbox.setSpacing(10);
+      vbox.setPadding(new Insets(10, 10, 10, 10));
+      vbox.getChildren().addAll(new Label("Module"),moduleMenu,new Label("Additional Fact (optional)"),addition,new Label("Sentence"),
+         sentence,new Label("Type"),typemenu,negative,buttonline);
+      Scene dialogScene = new Scene(vbox, 350, 320);
+      dialog.setScene(dialogScene);
+      dialog.show();
    }
 
    private void addAssumption(ObservableList<Assumption> table, String assumption, String contrary)
@@ -339,7 +415,14 @@ public class Window extends Application
          public void handle(ActionEvent e)
          {
             pushModulesToFramework();
-            getResults(name);
+            try
+            {
+               getResults(name);
+            }
+            catch (Exception ex)
+            {
+               showAlert(Alert.AlertType.ERROR, "Compiling Error", "Please check framework for errors");
+            }
          }
       });
       hbox.getChildren().addAll(deletebtn,compilebtn);
@@ -395,6 +478,7 @@ public class Window extends Application
 
    private void getResults(String name)
    {
+      Module m = null;
       ObservableList<List<String>> admissible = getAdmissibleList(name);
       ObservableList<List<String>> preferred = getPreferredList(name);
       ObservableList<String> credulous = getCredulousList(name);
@@ -403,11 +487,32 @@ public class Window extends Application
       preferred.clear();
       credulous.clear();
       sceptical.clear();
-      Module m = framework.compileModule(framework.module(name));
-      admissible.addAll(m.getAdmissible());
-      preferred.addAll(m.getPreferred());
-      credulous.addAll(m.getCredulous());
-      sceptical.addAll(m.getSceptical());
+      try
+      {
+         m = framework.compileModule(framework.module(name));
+         admissible.addAll(m.getAdmissible());
+         preferred.addAll(m.getPreferred());
+         credulous.addAll(m.getCredulous());
+         sceptical.addAll(m.getSceptical());
+      }
+      catch (Exception e)
+      {
+         showAlert(Alert.AlertType.ERROR, "Compiling Error", "Please check framework for errors");
+      }
+      catch (Error e)
+      {
+         showAlert(Alert.AlertType.ERROR, "Compiling Error", "Please check framework for errors");
+      }
+   }
+
+   private List<String> getTabNames()
+   {
+      List<String> names = new ArrayList<String>();
+      for(Tab t : tabPane.getTabs())
+      {
+         names.add(t.getText());
+      }
+      return names;
    }
 
    private Tab getTab(String name)

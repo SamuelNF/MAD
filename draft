@@ -1,0 +1,6 @@
+rescind(X) :- mutualMistake(barren),violateBasicAssumption(),not risk(X), party(X)
+mutualMistake(barren) :- hold(pregnant),call{CK+pregnant,[not barren],sk},call{BC,[barren],cr},call{BS,[barren],cr},call{BC+barren,[price(80)],sk},call{BS+barren,[price(80)],sk}
+violateBasicAssumption() :- hold(pregnant),call{CK+pregnant,[price(X)],sk},X>80
+risk(customer) :- mutualMistake(barren),call{BC,[not barren],cr}
+risk(supplier) :- mutualMistake(barren),call{BS,[not barren],cr}
+

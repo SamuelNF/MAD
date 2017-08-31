@@ -1,3 +1,0 @@
-#include "engine.lp".
-%%test1%%
-ass(a).

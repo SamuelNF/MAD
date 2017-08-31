@@ -59,13 +59,19 @@ class Framework
 //Compiles and prints named module results
    public void getResults(String name)
    {
-      System.out.println("\nGETTING RESULTS FOR "+name);
-      Module m = compileModule(modules.get(name));
-      m.displayResults();
+      try
+      {
+         Module m = compileModule(modules.get(name));
+         m.displayResults();
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
+      }
    }
 
 //Checks module for module calls
-   private boolean containsCall(String module)
+   static public boolean containsCall(String module) throws Exception, Error
    {
       Pattern pattern = Pattern.compile("call\\{.*?\\}");
       Matcher matcher = pattern.matcher(module);
@@ -74,23 +80,22 @@ class Framework
    }
 
 //Resolves module calls and returns compiled Module object
-   public Module compileModule(String module)
+   public Module compileModule(String module) throws Exception, Error
    {
+      Module m;
       while(containsCall(module))
       {
          
          Call call = getCall(module);
-         System.out.println("Trying to resolve call \""+call.callString+"\"");
          module = resolveCall(module, call);
       }
-      System.out.println("\nCOMPILING MODULE\n"+module);
-      Module m = new Module(name(module), module);
+      m = new Module(name(module), module);
       m.displayResults();
       return m;
    }
 
 //Returns first call string found in module
-   private Call getCall(String module)
+   static public Call getCall(String module)
    {
       Pattern pattern = Pattern.compile("call\\{.*?\\}");
       Matcher matcher = pattern.matcher(module);
@@ -100,7 +105,6 @@ class Framework
       }
       else
       {
-         System.out.println("WARNING - NO CALL FOUND BY getCall()");
          return null;
       }
    }
@@ -116,25 +120,32 @@ class Framework
       {
          callMod = callMod + "in("+ call.union +").\n";
       }
-      
-      Module m = compileModule(callMod);
+      Module m = null; 
+      try
+      {
+         m = compileModule(callMod);
 
-      if(call.containsVar)
-      {
-         module = resolveVars(module, m, call);
-      }
-      else
-      {
-         if(callSucceeds(m, call))
+         if(call.containsVar)
          {
-            System.out.println("CALL SUCCESS - "+call.callString);
-            module = affirmCall(module, call);
+            module = resolveVars(module, m, call);
          }
          else
          {
-            System.out.println("CALL FAILED - "+call.callString);
-            module = removeCall(module, call);
+            if(callSucceeds(m, call))
+            {
+               System.out.println("CALL SUCCESS - "+call.callString);
+               module = affirmCall(module, call);
+            }
+            else
+            {
+               System.out.println("CALL FAILED - "+call.callString);
+               module = removeCall(module, call);
+            }
          }
+      }
+      catch (Exception e)
+      {
+         e.printStackTrace();
       }
       return module;
    }
@@ -143,7 +154,7 @@ class Framework
    private String resolveVars(String s, Module m, Call c)
    {
       HashMap<String,String> vars = getVarValues(m,c);
-      System.out.println(vars);
+   //   System.out.println(vars);
       s = groundVars(s, vars, c);
       return s;
    }
@@ -185,8 +196,6 @@ class Framework
             int rCurrent = 0;
             while(vCurrent<v.length() && rCurrent<r.length())
             {
-               System.out.println("v = \""+v.substring(vCurrent));
-               System.out.println("r = \""+r.substring(rCurrent));
                if(v.toCharArray()[vCurrent] != r.toCharArray()[rCurrent])
                {
                   String variable = getVar(v.substring(vCurrent));
@@ -199,7 +208,6 @@ class Framework
                rCurrent++;
             }
          }
-         else System.out.println("NO MATCH FOUND");
       }
       return vars;
    }
@@ -288,13 +296,11 @@ class Framework
       {
          if(call.type.equals("sk"))
          {
-            System.out.println("Call is negative and sceptical: ");
             if(m.getCredulous().contains(call.assumption)) return false;
             else return true;
          }
          else
          {
-            System.out.println("Call is negative and credulous");
             if(m.getSceptical().contains(call.assumption)) return false;
             else return true;
          }
@@ -303,13 +309,11 @@ class Framework
       {
          if(call.type.equals("sk"))
          {
-            System.out.println("Call is positive and sceptical");
             if(m.getSceptical().contains(call.assumption)) return true;
             else return false;
          }
          else
          {
-            System.out.println("Call is positive and credulous");
             if(m.getCredulous().contains(call.assumption)) return true;
             else return false;
          }

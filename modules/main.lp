@@ -1,11 +1,9 @@
 #include "engine.lp".
 %%main%%
-party(customer).
-party(supplier).
-in(rescind(X)):-mutualmistake(barren),violatebasicassumption(),not risk(X),party(X).
-mutualmistake(barren):-hold(pregnant).
-violatebasicassumption():-hold(stolen).
-violatebasicassumption():-hold(pregnant),X=800,X>80.
-risk(supplier):-mutualmistake(barren).
-hold(pregnant).
-hold(stolen).
+in(party(customer)).
+in(party(supplier)).
+in(hold(pregnant)).
+in(mutualMistake(barren)):-in(hold(pregnant)).
+in(rescind(X)):-in(mutualMistake(barren)),in(violateBasicAssumption()),not in( risk(X)),in( party(X)).
+in(violateBasicAssumption()):-in(hold(pregnant)),X>80,X=800.
+in(risk(supplier)):-in(mutualMistake(barren)).

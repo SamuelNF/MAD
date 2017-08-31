@@ -1,8 +1,7 @@
 #include "engine.lp".
 %%CK%%
-ass(barren).
+in(fertile):-in(pregnant).
 in(price(800)):-in(pregnant).
-in(-barren):-in(pregnant).
-in(notsale):-in(stolen).
-contrary(barren,-barren).
+ass(barren).
+contrary(barren,fertile).
 in(pregnant).
