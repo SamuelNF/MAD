@@ -16,7 +16,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.*;
 import javafx.stage.*;
 
-public class Window extends Application 
+public class Mad extends Application 
 {
    static GridPane root = new GridPane();
    static Framework framework = new Framework();
