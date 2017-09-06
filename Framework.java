@@ -135,6 +135,7 @@ class Framework
             {
                System.out.println("CALL SUCCESS - "+call.callString);
                module = affirmCall(module, call);
+               System.out.println(module);
             }
             else
             {

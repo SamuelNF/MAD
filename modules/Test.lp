@@ -1,7 +1,6 @@
 #include "engine.lp".
 %%Test%%
-in(a):-in().
-in(b):-in().
+in(a).
 ass(a).
 contrary(a,b).
 ass(b).

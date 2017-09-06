@@ -40,10 +40,9 @@ public class Window extends Application
    {
       Menu moduleMenu = setupModuleMenu();
       Menu fileMenu = setupFileMenu();
-      Menu menu3 = new Menu("Help");
 
       MenuBar menuBar = new MenuBar();
-      menuBar.getMenus().addAll(moduleMenu, fileMenu, menu3);
+      menuBar.getMenus().addAll(moduleMenu, fileMenu);
       menuBar.setMinWidth(1400);
 
       root.add(menuBar,0,0);

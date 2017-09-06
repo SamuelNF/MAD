@@ -69,14 +69,17 @@ public class Rule implements java.io.Serializable
          }
          else
          {
-            if(p.contains("not"))
+            if(!p.isEmpty())
             {
-               p = p.replace("not","");
-               s = s + "not in(" + p + "),";
-            }
-            else
-            {
-               s = s + "in(" + p + "),";
+               if(p.contains("not"))
+               {
+                  p = p.replace("not","");
+                  s = s + "not in(" + p + "),";
+               }
+               else
+               {
+                  s = s + "in(" + p + "),";
+               }
             }
          }
       }
@@ -85,6 +88,7 @@ public class Rule implements java.io.Serializable
          s = s + c.replace("[not ","[-") + ",";
       }
       s = s.substring(0, s.length() - 1);
+      System.out.println("$$$$$$$"+s);
       return s;
    }
 }
